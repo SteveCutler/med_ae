@@ -7,7 +7,7 @@ from tensorflow.keras import models, layers
 from tensorflow.keras.models import load_model
 
 
-from utils import load_images, make_splits
+from utils import load_images, make_splits, ssim_mae_loss
 
 normal_dir = os.path.join(os.getcwd(), 'chest_xray/NORMAL')
 pneu_dir = os.path.join(os.getcwd(), 'chest_xray/PNEUMONIA')
@@ -78,7 +78,10 @@ encoded = encoder(inputs)
 decoded = decoder(encoded)
 autoencoder = models.Model(inputs, decoded)
 
-autoencoder.compile(optimizer='adam', loss='mse')
+## Use new MAE+SSIM loss function
+
+
+autoencoder.compile(optimizer='adam', loss=ssim_mae_loss)
 autoencoder.summary()
 
 
@@ -100,5 +103,5 @@ errors = np.mean((val_x - reconstructions) ** 2, axis=(1,2,3))
 
 ## Saving the weights in TF format, as a folder:
 
-autoencoder.save("autoencoder_model_noisy_3layer.keras")  
+autoencoder.save("autoencoder_model_ssim.keras")  
 

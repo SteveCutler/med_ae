@@ -96,3 +96,12 @@ def make_splits(normal_images, pneu_images):
     test_y = np.concatenate([np.zeros(len(norm_test)),np.ones(len(pneu_test))])
 
     return val_x, val_y, test_x, test_y, norm_train, norm_val
+
+# Define new loss paradigm: SSIM+MAE 
+def ssim_mae_loss(y_true, y_pred):
+    # Mean Absolute Error
+    mae = tf.reduce_mean(tf.abs(y_true - y_pred))
+    # SSIM similarity (closer to 1 means better)
+    ssim = tf.reduce_mean(tf.image.ssim(y_true, y_pred, max_val=1.0))
+    # Hybrid: lower = better
+    return 0.5 * mae + (1 - 0.5) * (1 - ssim)
