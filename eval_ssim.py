@@ -68,6 +68,7 @@ ssim_vals = np.array(ssim_vals)
 
 ## Hybrid score (higher = more anomalous)
 scores_val = 0.5 * errors_val + 0.5 * (1 - ssim_vals)
+scores_val = -scores_val
 
 
 
