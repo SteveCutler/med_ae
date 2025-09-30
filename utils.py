@@ -2,9 +2,13 @@ import os
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
+from tensorflow.keras import models, layers
 
+## Glob variables
 IMG_SIZE = (160, 160)
 BATCH_SIZE = 32
+input_shape = (160, 160, 1)
+
 
 def load_images(normal_dir, pneu_dir):
     ## Load data from file
@@ -105,3 +109,37 @@ def ssim_mae_loss(y_true, y_pred):
     ssim = tf.reduce_mean(tf.image.ssim(y_true, y_pred, max_val=1.0))
     # Hybrid: lower = better
     return 0.5 * mae + (1 - 0.5) * (1 - ssim)
+
+## Encoder
+
+encoder = models.Sequential([
+    layers.Input(shape=input_shape),
+    layers.Conv2D(32, (3,3), activation='relu', padding='same'),
+    layers.MaxPooling2D((2,2), padding='same'),
+    layers.Conv2D(64, (3,3), activation='relu', padding='same'),
+    layers.MaxPooling2D((2,2), padding='same'),
+    layers.Conv2D(128, (3,3), activation='relu', padding='same'),
+    layers.MaxPooling2D((2,2), padding='same'),
+    # layers.Conv2D(256, (3,3), activation='relu', padding='same'),
+    # layers.MaxPooling2D((2,2), padding='same'),
+])
+
+
+## Decoder
+
+decoder = models.Sequential([
+    # layers.Conv2DTranspose(256, (3,3), strides=2, activation = 'relu', padding = 'same'),
+    layers.Conv2DTranspose(128, (3,3), strides=2, activation = 'relu', padding = 'same'),
+    layers.Conv2DTranspose(64, (3,3), strides=2, activation = 'relu', padding = 'same'),
+    layers.Conv2DTranspose(32, (3,3), strides=2, activation = 'relu', padding = 'same'),
+    layers.Conv2D(1, (3,3), activation ='sigmoid', padding='same')
+])
+
+## latent representation helper function
+def get_latents(enc, data, batch_size=32):
+    latents = []
+    for i in range(0, len(data), batch_size):
+        batch = data[i:i+batch_size]
+        z = enc.predict(data[i:i+batch_size], verbose=0)
+        latents.append(z)
+    return np.concatenate(latents, axis=0)
